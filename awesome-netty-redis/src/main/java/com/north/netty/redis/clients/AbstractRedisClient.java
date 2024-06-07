@@ -7,6 +7,10 @@ import com.north.netty.redis.connections.ConnectionPool;
 import com.north.netty.redis.connections.RedisConnection;
 import com.north.netty.redis.enums.ClientType;
 import com.north.netty.redis.exceptions.FailedToGetConnectionException;
+import com.north.netty.redis.utils.CmdBuildUtils;
+import io.netty.util.internal.StringUtil;
+
+import java.util.Collections;
 
 /**
  * @author laihaohua
@@ -30,6 +34,10 @@ public abstract class AbstractRedisClient<T> implements RedisClient<T> {
                 // 要锁定这个连接
                 connection.lock();
                 try{
+                    //先密码认证
+                    if (!StringUtil.isNullOrEmpty(RedisConfig.passwd)) {
+                        connection.writeAndFlush(CmdBuildUtils.buildString("auth", Collections.singletonList(RedisConfig.passwd)));
+                    }
                     // 发送命令
                     connection.writeAndFlush(data).sync();
                     // 获取命令的返回结果
